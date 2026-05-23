@@ -9,7 +9,7 @@ br7 = 340
         br      1f
         4
 
-/ trap vectors
+/ trap vectors  // When exception occurs, load PC with trap and load PS with the byte following the instruction
         trap; br7+0.            / bus error
         trap; br7+1.            / illegal instruction
         trap; br7+2.            / bpt-trace trap
@@ -56,7 +56,7 @@ br7 = 340
 .globl  call, trap
 
 .globl  _klrint
-klin:   jsr     r0,call; _klrint
+klin:   jsr     r0,call; _klrint    // Push r0 to stack; store addr that stores klrint to r0; store addr of call to PC(jump to call)
 
 .globl  _klxint
 klou:   jsr     r0,call; _klxint

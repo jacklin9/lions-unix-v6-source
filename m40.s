@@ -17,7 +17,7 @@ start:
 
 / initialize systems segments
 
-	mov	$KISA0,r0
+	mov	$KISA0,r0   // Do kernel space mapping
 	mov	$KISD0,r1
 	mov	$200,r4
 	clr	r2
@@ -30,7 +30,7 @@ start:
 
 / initialize user segment
 
-	mov	$_end+63.,r2
+	mov	$_end+63.,r2    // Physical address after _end. This is used as the first u area
 	ash	$-6,r2
 	bic	$!1777,r2
 	mov	r2,(r0)+		/ ksr6 = sysu
@@ -44,7 +44,7 @@ start:
 
 / get a sp and start segmentation
 
-	mov	$_u+[usize*64.],sp
+	mov	$_u+[usize*64.],sp  // _u is set as a fixed addr. Kernel stack is at the top of u area
 	inc	SSR0
 
 / clear bss
@@ -67,10 +67,10 @@ start:
 / on return, enter user mode at 0R
 
 	mov	$30000,PS
-	jsr	pc,_main
-	mov	$170000,-(sp)
-	clr	-(sp)
-	rtt
+	jsr	pc,_main    // Push pc to stack and move _main to pc
+	mov	$170000,-(sp)   // Push 170000 to kernel stack
+	clr	-(sp)   // Push 0 to kernel stack 
+	rtt // Return from kernel mode to user mode addr 0
 
 /* ---------------------------       */
 .globl	_clearseg
@@ -125,12 +125,12 @@ _copyseg:
 .globl	_savu, _retu, _aretu
 _savu:
 	bis	$340,PS
-	mov	(sp)+,r1
-	mov	(sp),r0
-	mov	sp,(r0)+
+	mov	(sp)+,r1    // Return addr is in r1
+	mov	(sp),r0     // Arg is in r0
+	mov	sp,(r0)+    // Save kernel stack top addr to the addr specified by arg
 	mov	r5,(r0)+
-	bic	$340,PS
-	jmp	(r1)
+	bic	$340,PS     // Change processor priority
+	jmp	(r1)        // Jump to return addr
 
 _aretu:
 	bis	$340,PS
@@ -140,14 +140,14 @@ _aretu:
 
 _retu:
 	bis	$340,PS
-	mov	(sp)+,r1
-	mov	(sp),KISA6
-	mov	$_u,r0
+	mov	(sp)+,r1    // Return addr is in r1
+	mov	(sp),KISA6  // Switch to new u area specified by arg
+	mov	$_u,r0      // Addr of u area is now in r0
 1:
-	mov	(r0)+,sp
+	mov	(r0)+,sp    // Restore context
 	mov	(r0)+,r5
 	bic	$340,PS
-	jmp	(r1)
+	jmp	(r1)        // Jump to return addr
 
 /* ---------------------------       */
 .globl	trap, call
@@ -160,11 +160,11 @@ trap:
 	mov	SSR0,ssr
 	mov	SSR2,ssr+4
 	mov	$1,SSR0
-	jsr	r0,call1; _trap
+	jsr	r0,call1; _trap // What this instruction does is: push r0 to stack, store the address of next instruction which stores _trap to r0; jump to call1
 	/ no return
 1:
 	mov	$1,SSR0
-	mov	nofault,(sp)
+	mov	nofault,(sp)    // nofault is not 0 (can be err)
 	rtt
 
 /* ---------------------------       */
@@ -214,7 +214,7 @@ call:
 .globl	_fuiword, _suiword
 _fuibyte:
 _fubyte:
-	mov	2(sp),r1
+	mov	2(sp),r1    // Get the parameter of the call
 	bic	$1,r1
 	jsr	pc,gword
 	cmp	r1,2(sp)
@@ -250,12 +250,12 @@ fuword:
 	rts	pc
 
 gword:
-	mov	PS,-(sp)
-	bis	$340,PS
-	mov	nofault,-(sp)
+	mov	PS,-(sp)    // Store machine status
+	bis	$340,PS // Set previous mode to be user mode
+	mov	nofault,-(sp)   // Save previous value of nofault
 	mov	$err,nofault
-	mfpi	(r1)
-	mov	(sp)+,r0
+	mfpi	(r1)    // Read from previous address space. This may trigger exception
+	mov	(sp)+,r0    // Get the result
 	br	1f
 
 _suiword:
@@ -283,7 +283,7 @@ err:
 	mov	(sp)+,PS
 	tst	(sp)+
 	mov	$-1,r0
-	rts	pc
+	rts	pc  // Actually return to the place who calls fuibyte
 
 /* ---------------------------       */
 .globl	_savfp, _display

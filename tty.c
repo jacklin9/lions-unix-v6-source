@@ -138,12 +138,12 @@ cinit()
 	register struct cblock *cp;
 	register struct cdevsw *cdp;
 	ccp = cfree;
-	for (cp=(ccp+07)&~07; cp <= &cfree[NCLIST-1]; cp++) {
+	for (cp=(ccp+07)&~07; cp <= &cfree[NCLIST-1]; cp++) {   // Link cblock together
 		cp->c_next = cfreelist;
 		cfreelist = cp;
 	}
 	ccp = 0;
-	for(cdp = cdevsw; cdp->d_open; cdp++)
+	for(cdp = cdevsw; cdp->d_open; cdp++)   // Count char devices
 		ccp++;
 	nchrdev = ccp;
 }

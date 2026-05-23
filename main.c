@@ -57,11 +57,11 @@ main()
 	 */
 
 	updlock = 0;
-	i = *ka6 + USIZE;
-	UISD->r[0] = 077406;
+	i = *ka6 + USIZE;   // i is the physical addr of kernel stack top
+	UISD->r[0] = 077406;    // Initialize user space descriptors
 	for(;;) {
-		UISA->r[0] = i;
-		if(fuibyte(0) < 0)
+		UISA->r[0] = i; // Map physical address to user space address 0
+		if(fuibyte(0) < 0)  // Try to read mem of user address 0
 			break;
 		clearseg(i);
 		maxmem++;
@@ -90,7 +90,7 @@ main()
 	proc[0].p_size = USIZE;
 	proc[0].p_stat = SRUN;
 	proc[0].p_flag =| SLOAD|SSYS;
-	u.u_procp = &proc[0];
+	u.u_procp = &proc[0];   // Set the current proc to proc[0] so it becomes alive
 
 	/*
 	 * determine clock
@@ -98,7 +98,7 @@ main()
 
 	UISA->r[7] = ka6[1]; /* io segment */
 	UISD->r[7] = 077406;
-	lks = CLOCK1;
+	lks = CLOCK1;   // Probe clock
 	if(fuiword(lks) == -1) {
 		lks = CLOCK2;
 		if(fuiword(lks) == -1)
@@ -109,7 +109,7 @@ main()
 	 * set up 'known' i-nodes
 	 */
 
-	*lks = 0115;
+	*lks = 0115;    // Init clock
 	cinit();
 	binit();
 	iinit();
@@ -124,7 +124,7 @@ main()
 	 * with system process
 	 */
 
-	if(newproc()) {
+	if(newproc()) { // Parent returns 0; child returns 1 from swtch
 		expand(USIZE+1);
 		estabur(0, 1, 0, 0);
 		copyout(icode, 0, sizeof icode);
@@ -132,7 +132,7 @@ main()
 		 * Return goes to loc. 0 of user init
 		 * code just copied out.
 		 */
-		return;
+		return; // Child returns to assembly code
 	}
 	sched();
 }

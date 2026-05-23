@@ -54,7 +54,7 @@ retry:
 	 */
 
 	rip = u.u_procp;
-	up = rip;
+	up = rip;       // Both rip and up point to current proc; rpp and p point to new proc
 	rpp->p_stat = SRUN;
 	rpp->p_flag = SLOAD;
 	rpp->p_uid = rip->p_uid;
@@ -83,7 +83,7 @@ retry:
 	 * of the new process so that when it is actually
 	 * created (by copying) it will look right.
 	 */
-	savu(u.u_rsav);
+	savu(u.u_rsav); // Save context of current proc
 	rpp = p;
 	u.u_procp = rpp;
 	rip = up;
@@ -154,14 +154,14 @@ sloop:
 loop:
 	spl6();
 	n = -1;
-	for(rp = &proc[0]; rp < &proc[NPROC]; rp++)
+	for(rp = &proc[0]; rp < &proc[NPROC]; rp++) // Find proc who resides in swap for longest time
 	if(rp->p_stat==SRUN && (rp->p_flag&SLOAD)==0 &&
 	    rp->p_time > n) {
 		p1 = rp;
 		n = rp->p_time;
 	}
 	if(n == -1) {
-		runout++;
+		runout++;   // Wait for a proc who needs be swapped in
 		sleep(&runout, PSWP);
 		goto loop;
 	}
@@ -265,8 +265,8 @@ sleep(chan, pri)
 	register *rp, s;
 
 	s = PS->integ;
-	rp = u.u_procp;
-	if(pri >= 0) {
+	rp = u.u_procp; // Get current proc
+	if(pri >= 0) {  // Sleep on low priority and can be interrupted by signal
 		if(issig())
 			goto psig;
 		spl6();
@@ -336,7 +336,7 @@ setrun(p)
 	rp->p_wchan = 0;
 	rp->p_stat = SRUN;
 	if(rp->p_pri < curpri)
-		runrun++;
+		runrun++;   // Set need resched
 	if(runout != 0 && (rp->p_flag&SLOAD) == 0) {
 		runout = 0;
 		wakeup(&runout);
@@ -383,14 +383,14 @@ swtch()
 	/*
 	 * Remember stack of caller
 	 */
-	savu(u.u_rsav);
+	savu(u.u_rsav); // Save kernel context of prev proc
 	/*
 	 * Switch to scheduler's stack
 	 */
-	retu(proc[0].p_addr);
+	retu(proc[0].p_addr);   // Change to context of proc 0
 
 loop:
-	runrun = 0;
+	runrun = 0; // Clear the need resched flag
 	rp = p;
 	p = NULL;
 	n = 128;
@@ -441,7 +441,7 @@ loop:
 	/* The value returned here has many subtle implications.
 	 * See the newproc comments.
 	 */
-	return(1);
+	return(1);  // Return to the place who calls savu in proc rp
 }
 /* ---------------------------       */
 

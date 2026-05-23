@@ -16,9 +16,9 @@ int	tout[2];		/* time of day of next sleep */
 
 int	mpid;			/* generic for unique process id's */
 
-char	runin;			/* scheduling flag */
-char	runout;			/* scheduling flag */
-char	runrun;			/* scheduling flag */
+char	runin;			/* scheduling flag */   // Swapper is waiting to swap out a sleep proc who is in mem
+char	runout;			/* scheduling flag */   // Swapper is waiting to swap in a swapped out proc who becomes runnable
+char	runrun;			/* scheduling flag */   // When not 0, a proc with higher priority becomes runnable and resched is needed
 
 char	curpri;			/* more scheduling */
 

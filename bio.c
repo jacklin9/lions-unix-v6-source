@@ -52,7 +52,7 @@ bread(dev, blkno)
 {
 	register struct buf *rbp;
 
-	rbp = getblk(dev, blkno);
+	rbp = getblk(dev, blkno);   // Get block cache
 	if (rbp->b_flags&B_DONE)
 		return(rbp);
 	rbp->b_flags =| B_READ;
@@ -170,9 +170,9 @@ struct buf *bp;
 	register int sps;
 
 	rbp = bp;
-	if (rbp->b_flags&B_WANTED)
+	if (rbp->b_flags&B_WANTED)  // Somebody is waiting for this block cache
 		wakeup(rbp);
-	if (bfreelist.b_flags&B_WANTED) {
+	if (bfreelist.b_flags&B_WANTED) {   // Somebody is waiting for free block cache
 		bfreelist.b_flags =& ~B_WANTED;
 		wakeup(&bfreelist);
 	}
@@ -180,13 +180,13 @@ struct buf *bp;
 		rbp->b_dev.d_minor = -1;  /* no assoc. on error */
 	backp = &bfreelist.av_back;
 	sps = PS->integ;
-	spl6();
+	spl6(); // Enter critical area to block interrupt who may also operate the block cache
 	rbp->b_flags =& ~(B_WANTED|B_BUSY|B_ASYNC);
 	(*backp)->av_forw = rbp;
 	rbp->av_back = *backp;
 	*backp = rbp;
 	rbp->av_forw = &bfreelist;
-	PS->integ = sps;
+	PS->integ = sps;    // Leave critical area
 }
 /* ---------------------------       */
 
@@ -225,20 +225,20 @@ getblk(dev, blkno)
 		panic("blkdev");
 
     loop:
-	if (dev < 0)
+	if (dev < 0)    // Get a block cache not associated with block device
 		dp = &bfreelist;
-	else {
+	else {  // Get a block cache associated with a block device
 		dp = bdevsw[dev.d_major].d_tab;
 		if(dp == NULL)
 			panic("devtab");
 		for (bp=dp->b_forw; bp != dp; bp = bp->b_forw) {
 			if (bp->b_blkno!=blkno || bp->b_dev!=dev)
 				continue;
-			spl6();
-			if (bp->b_flags&B_BUSY) {
+			spl6(); // Enter critical section
+			if (bp->b_flags&B_BUSY) {   // The required block cache is busy
 				bp->b_flags =| B_WANTED;
 				sleep(bp, PRIBIO);
-				spl0();
+				spl0(); // Leave critical section
 				goto loop;
 			}
 			spl0();
@@ -358,7 +358,7 @@ binit()
 
 	bfreelist.b_forw = bfreelist.b_back =
 	    bfreelist.av_forw = bfreelist.av_back = &bfreelist;
-	for (i=0; i<NBUF; i++) {
+	for (i=0; i<NBUF; i++) {    // Link all buffer caches together headed by bfreelist and release it
 		bp = &buf[i];
 		bp->b_dev = -1;
 		bp->b_addr = buffers[i];
@@ -371,7 +371,7 @@ binit()
 	}
 	i = 0;
 	for (bdp = bdevsw; bdp->d_open; bdp++) {
-		dp = bdp->d_tab;
+		dp = bdp->d_tab;    // List of block cache assigned to this device
 		if(dp) {
 			dp->b_forw = dp;
 			dp->b_back = dp;
