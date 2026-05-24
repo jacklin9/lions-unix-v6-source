@@ -180,10 +180,10 @@ call:
 	mov	r1,-(sp)
 	mfpi	sp
 	mov	4(sp),-(sp)
-	bic	$!37,(sp)
+	bic	$!37,(sp)   // Get error id
 	bit	$30000,PS
-	beq	1f
-	jsr	pc,*(r0)+
+	beq	1f  // Previous mode is kernel mode. No need to reschedule: no kernel preemption
+	jsr	pc,*(r0)+   // Previous mode is user mode
 2:
 	bis	$340,PS
 	tstb	_runrun
