@@ -337,7 +337,7 @@ setrun(p)
 	rp->p_stat = SRUN;
 	if(rp->p_pri < curpri)
 		runrun++;   // Set need resched
-	if(runout != 0 && (rp->p_flag&SLOAD) == 0) {
+	if(runout != 0 && (rp->p_flag&SLOAD) == 0) {    // Somebody (swapper) is waiting for runnable poc in swap
 		runout = 0;
 		wakeup(&runout);
 	}
@@ -374,7 +374,7 @@ setpri(up)
  */
 swtch()
 {
-	static struct proc *p;
+	static struct proc *p;  // Remember where proc search reaches last time
 	register i, n;
 	register struct proc *rp;
 
@@ -423,7 +423,7 @@ loop:
 	 * his segmentation registers.
 	 */
 	retu(rp->p_addr);
-	sureg();
+	sureg();    // Restore mem mapping
 	/*
 	 * If the new process paused because it was
 	 * swapped out, set the stack level to the last call
@@ -441,7 +441,7 @@ loop:
 	/* The value returned here has many subtle implications.
 	 * See the newproc comments.
 	 */
-	return(1);  // Return to the place who calls savu in proc rp
+	return(1);  // Return to the place calling function who calls savu in proc rp, as if swtch is the function called at the place
 }
 /* ---------------------------       */
 

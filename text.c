@@ -39,7 +39,7 @@ int *p;
 		wakeup(&runout);
 	}
 }
-* ---------------------------       */
+/* ---------------------------       */
 
 /*
  * relinquish use of the shared text segment
@@ -51,8 +51,8 @@ xfree()
 
 	if((xp=u.u_procp->p_textp) != NULL) {
 		u.u_procp->p_textp = NULL;
-		xccdec(xp);
-		if(--xp->x_count == 0) {
+		xccdec(xp); // Dec in-core reference count
+		if(--xp->x_count == 0) {    // Dec swap reference count
 			ip = xp->x_iptr;
 			if((ip->i_mode&ISVTX) == 0) {
 				xp->x_iptr = NULL;

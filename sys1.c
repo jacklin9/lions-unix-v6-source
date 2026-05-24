@@ -222,32 +222,32 @@ exit()
 	register struct proc *p;
 
 	u.u_procp->p_flag =& ~STRC;
-	for(q = &u.u_signal[0]; q < &u.u_signal[NSIG];)
+	for(q = &u.u_signal[0]; q < &u.u_signal[NSIG];) // Clear signal handler
 		*q++ = 1;
-	for(q = &u.u_ofile[0]; q < &u.u_ofile[NOFILE]; q++)
+	for(q = &u.u_ofile[0]; q < &u.u_ofile[NOFILE]; q++) // Close opened files
 		if(a = *q) {
 			*q = NULL;
 			closef(a);
 		}
-	iput(u.u_cdir);
+	iput(u.u_cdir); // Decrease ref count of current dir
 	xfree();
 	a = malloc(swapmap, 1);
 	if(a == NULL)
 		panic("out of swap");
 	p = getblk(swapdev, a);
-	bcopy(&u, p->b_addr, 256);
+	bcopy(&u, p->b_addr, 256);  // Copy u area to swap for accounting
 	bwrite(p);
 	q = u.u_procp;
-	mfree(coremap, q->p_size, q->p_addr);
+	mfree(coremap, q->p_size, q->p_addr);   // Free u area
 	q->p_addr = a;
 	q->p_stat = SZOMB;
-
+    // What happens if interrupt happens here? No problem: UNIX v6 has no kernel preemption
 loop:
 	for(p = &proc[0]; p < &proc[NPROC]; p++)
-	if(q->p_ppid == p->p_pid) {
+	if(q->p_ppid == p->p_pid) { // Find parent p
 		wakeup(&proc[1]);
 		wakeup(p);
-		for(p = &proc[0]; p < &proc[NPROC]; p++)
+		for(p = &proc[0]; p < &proc[NPROC]; p++)    // Find all children
 		if(q->p_pid == p->p_ppid) {
 			p->p_ppid  = 1;
 			if (p->p_stat == SSTOP)
@@ -331,7 +331,7 @@ fork()
 	goto out;
 
 found:
-	if(newproc()) {
+	if(newproc()) { // Child
 		u.u_ar0[R0] = p1->p_pid;
 		u.u_cstime[0] = 0;
 		u.u_cstime[1] = 0;

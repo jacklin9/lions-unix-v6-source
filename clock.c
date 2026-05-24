@@ -56,7 +56,7 @@ clock(dev, sp, r1, nps, r0, pc, ps)
 	 * if ps is high, just return
 	 */
 
-	if((ps&0340) != 0)
+	if((ps&0340) != 0)  // If priority > 0, just go out
 		goto out;
 
 	/*
@@ -160,7 +160,7 @@ timeout(fun, arg, tim)
 	p2 = p1;
 	while(p2->c_func != 0)
 		p2++;
-	while(p2 >= p1) {
+	while(p2 >= p1) {   // Insert
 		(p2+1)->c_time = p2->c_time;
 		(p2+1)->c_func = p2->c_func;
 		(p2+1)->c_arg = p2->c_arg;

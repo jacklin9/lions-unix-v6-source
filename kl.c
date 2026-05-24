@@ -75,7 +75,7 @@ klxint(dev)
 		wakeup(&tp->t_outq);
 }
 /* ---------------------------       */
-klrint(dev)
+klrint(dev) // Also see klopen
 {	register int c, *addr;
 	register struct tty *tp;
 	tp = &kl11[dev.d_minor];
@@ -84,7 +84,7 @@ klrint(dev)
 	addr->klrcsr =| RDRENB;
 	if ((c&0177)==0)
 		addr->kltbuf = c;	/* hardware botch */
-	ttyinput(c, tp);
+	ttyinput(c, tp);    // Do input
 }
 /* ---------------------------       */
 klsgtty(dev, v)

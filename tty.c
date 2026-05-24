@@ -243,7 +243,7 @@ struct tty *atp;
 	if ((c =& 0177) == '\r' && t_flags&CRMOD)
 		c = '\n';
 	if ((t_flags&RAW)==0 && (c==CQUIT || c==CINTR)) {
-		signal(tp, c==CINTR? SIGINT:SIGQIT);
+		signal(tp, c==CINTR? SIGINT:SIGQIT);    // Send signal to all procs whose control terminal is tp
 		flushtty(tp);
 		return;
 	}
@@ -253,7 +253,7 @@ struct tty *atp;
 	}
 	if (t_flags&LCASE && c>='A' && c<='Z')
 		c =+ 'a'-'A';
-	putc(c, &tp->t_rawq);
+	putc(c, &tp->t_rawq);   // putc is a assembly routine
 	if (t_flags&RAW || c=='\n' || c==004) {
 		wakeup(&tp->t_rawq);
 		if (putc(0377, &tp->t_rawq)==0)

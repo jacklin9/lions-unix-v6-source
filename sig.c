@@ -69,7 +69,7 @@ int *p;
 		rp->p_sig = sig;
 	if(rp->p_stat > PUSER)
 		rp->p_stat = PUSER;
-	if(rp->p_stat == SWAIT)
+	if(rp->p_stat == SWAIT) // Interruptable sleep
 		setrun(rp);
 }
 /* ---------------------------       */
@@ -97,7 +97,7 @@ issig()
 			if ((n = p->p_sig) == 0)
 				return(0);
 		}
-		if((u.u_signal[n]&1) == 0)
+		if((u.u_signal[n]&1) == 0)  // Signal handler is set
 			return(n);
 	}
 	return(0);
@@ -145,7 +145,7 @@ psig()
 	rp = u.u_procp;
 	n = rp->p_sig;
 	rp->p_sig = 0;
-	if((p=u.u_signal[n]) != 0) {
+	if((p=u.u_signal[n]) != 0) {    // Need to deliver signal
 		u.u_error = 0;
 		if(n != SIGINS && n != SIGTRC)
 			u.u_signal[n] = 0;

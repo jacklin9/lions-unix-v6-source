@@ -165,7 +165,7 @@ trap(dev, sp, r1, nps, r0, pc, ps)
 		i = SIGSEG;
 		break;
 	}
-	psignal(u.u_procp, i);
+	psignal(u.u_procp, i);  // Post signal to the proc itself
 
 out:
 	if(issig())
@@ -193,7 +193,7 @@ int (*f)();
 {
 
 	u.u_intflg = 1;
-	savu(u.u_qsav);
+	savu(u.u_qsav); // For signal interrupt
 	(*f)();
 	u.u_intflg = 0;
 }

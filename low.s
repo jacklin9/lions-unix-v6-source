@@ -56,23 +56,23 @@ br7 = 340
 .globl  call, trap
 
 .globl  _klrint
-klin:   jsr     r0,call; _klrint    // Push r0 to stack; store addr that stores klrint to r0; store addr of call to PC(jump to call)
+klin:   jsr     r0,call; _klrint    // Push r0 to stack; store addr that stores klrint to r0; store addr of call to PC(jump to call). Stack <- r0 <- PC <- Dest addr. This handles tty input interrupt
 
 .globl  _klxint
-klou:   jsr     r0,call; _klxint
+klou:   jsr     r0,call; _klxint    // This handles tty output interrupt
 
 .globl  _pcrint
-pcin:   jsr     r0,call; _pcrint
+pcin:   jsr     r0,call; _pcrint    // Paper card read interrupt
 
 .globl  _pcpint
-pcou:   jsr     r0,call; _pcpint
+pcou:   jsr     r0,call; _pcpint    // Paper card write interrupt
 
 .globl  _clock
-kwlp:   jsr     r0,call; _clock
+kwlp:   jsr     r0,call; _clock     // Time interrupt
 
 
 .globl  _lpintr
-lpou:   jsr     r0,call; _lpintr
+lpou:   jsr     r0,call; _lpint     // Line printer interrupt
 
 .globl  _rkintr
-rkio:   jsr     r0,call; _rkintr
+rkio:   jsr     r0,call; _rkintr    // Disk interrupt

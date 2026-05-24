@@ -169,12 +169,12 @@ trap:
 
 /* ---------------------------       */
 .globl	_runrun, _swtch
-call1:
+call1:  // We are from trap
 	tst	-(sp)
-	bic	$340,PS
+	bic	$340,PS // Change to priority 0
 	br	1f
 
-call:
+call:   // We are from interrupt
 	mov	PS,-(sp)
 1:
 	mov	r1,-(sp)
@@ -182,21 +182,21 @@ call:
 	mov	4(sp),-(sp)
 	bic	$!37,(sp)   // Get error id
 	bit	$30000,PS
-	beq	1f  // Previous mode is kernel mode. No need to reschedule: no kernel preemption
-	jsr	pc,*(r0)+   // Previous mode is user mode
+	beq	1f  // Previous mode is kernel mode. No need to reschedule: no kernel preemption in UNIX v6
+	jsr	pc,*(r0)+   // Previous mode is user mode. Possible function call can be C function trap, or interrupt handler like klrint. Signal handling is done in trap and some interrupt handlers, but not all interrupt handlers process signal
 2:
-	bis	$340,PS
+	bis	$340,PS // Enter critical section
 	tstb	_runrun
 	beq	2f
 	bic	$340,PS
-	jsr	pc,_swtch
-	br	2b
+	jsr	pc,_swtch   // Reschedule
+	br	2b  // Switch back here
 2:
 	tst	(sp)+
 	mtpi	sp
 	br	2f
 1:
-	bis	$30000,PS
+	bis	$30000,PS   // Set previous mode to be user mode
 	jsr	pc,*(r0)+
 	cmp	(sp)+,(sp)+
 2:
