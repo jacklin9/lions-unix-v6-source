@@ -132,13 +132,13 @@ _savu:
 	bic	$340,PS     // Change processor priority
 	jmp	(r1)        // Jump to return addr
 
-_aretu:
+_aretu: // Do not change underlying u area, instead it does a long jump in one proc
 	bis	$340,PS
 	mov	(sp)+,r1
 	mov	(sp),r0
 	br	1f
 
-_retu:
+_retu:  // Switch to a new u area, and reload stack from the new u area
 	bis	$340,PS
 	mov	(sp)+,r1    // Return addr is in r1
 	mov	(sp),KISA6  // Switch to new u area specified by arg
